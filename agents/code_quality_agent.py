@@ -1,6 +1,7 @@
 from langchain.agents import create_agent
 from tools.file_tools import run_terminal
-
+from dotenv import load_dotenv
+load_dotenv()
 code_quality_agent= create_agent(
     model="google_genai:gemini-3.1-flash-lite",
     tools=[run_terminal],

@@ -185,34 +185,34 @@ graph.add_edge("planner", "security")
 graph.add_edge("planner", "logic")
 graph.add_edge("planner", "code_quality")
 
-# Depending on LangGraph version this may need adjustment
+
 graph.add_edge(["security", "logic", "code_quality"], "report")
 
 graph.add_edge("report", END)
 
-app = graph.compile()
+app_graph = graph.compile()
 
-for event in app.stream(
-    {
-        "user_query": "Find bugs in this project",
-        "project_path": "/Users/yash/Desktop/NERVE"
-    }
-):
-    node_name = list(event.keys())[0]
-    node_output = event[node_name]
+# for event in app.stream(
+#     {
+#         "user_query": "Find bugs in this project",
+#         "project_path": "/Users/yash/Desktop/NERVE"
+#     }
+# ):
+#     node_name = list(event.keys())[0]
+#     node_output = event[node_name]
 
-    print("\n" + "=" * 60)
-    print(f"NODE: {node_name.upper()}")
-    print("=" * 60)
+#     print("\n" + "=" * 60)
+#     print(f"NODE: {node_name.upper()}")
+#     print("=" * 60)
 
-    for key, value in node_output.items():
-        if isinstance(value, list):
-            for item in value:
-                if isinstance(item, dict) and "text" in item:
-                    print(item["text"])
-                else:
-                    print(item)
-        else:
-            print(value)
+#     for key, value in node_output.items():
+#         if isinstance(value, list):
+#             for item in value:
+#                 if isinstance(item, dict) and "text" in item:
+#                     print(item["text"])
+#                 else:
+#                     print(item)
+#         else:
+#             print(value)
 
-    print()
+#     print()

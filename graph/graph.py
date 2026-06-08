@@ -6,11 +6,19 @@ from agents.security_agent import security_agent
 from agents.chat_agent import chat_agent
 from langgraph.graph import StateGraph, START, END
 from typing import TypedDict,List
+from pydantic import BaseModel
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+class Agents(BaseModel):
+    security_agent: bool
+    logic_agent: bool
+    code_quality_agent: bool
 
 
 class AgentState(TypedDict):
     user_query: str
     project_path: str
+    agents_required: Agents
 
     project_map: str
     plan: str
@@ -89,9 +97,17 @@ Project Scan:
             ]
         }
     )
+    
+    plan_text = get_last_message(result)
+    
+    # Use structured output to decide which agents to run
+    llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite")
+    structured_llm = llm.with_structured_output(Agents)
+    agents_required = structured_llm.invoke(f"Based on this plan, which agents should be executed? Return true for the needed agents.\n\nPlan:\n{plan_text}")
 
     return {
-        "plan": get_last_message(result)
+        "plan": plan_text,
+        "agents_required": agents_required
     }
 
 
@@ -206,9 +222,26 @@ graph.add_edge("chat", "scanner")
 
 graph.add_edge("scanner", "planner")
 
-graph.add_edge("planner", "security")
-graph.add_edge("planner", "logic")
-graph.add_edge("planner", "code_quality")
+def route_to_agents(state: AgentState):
+    destinations = []
+    if "agents_required" in state:
+        reqs = state["agents_required"]
+        if getattr(reqs, "security_agent", False):
+            destinations.append("security")
+        if getattr(reqs, "logic_agent", False):
+            destinations.append("logic")
+        if getattr(reqs, "code_quality_agent", False):
+            destinations.append("code_quality")
+            
+    if not destinations:
+        return ["report"]
+    return destinations
+
+graph.add_conditional_edges(
+    "planner", 
+    route_to_agents, 
+    ["security", "logic", "code_quality", "report"]
+)
 
 
 graph.add_edge(["security", "logic", "code_quality"], "report")

@@ -3,9 +3,9 @@ from agents.code_quality_agent import code_quality_agent
 from agents.logic_agent import logic_agent
 from agents.project_scanner_agent import project_scanner_agent
 from agents.security_agent import security_agent
-
+from agents.chat_agent import chat_agent
 from langgraph.graph import StateGraph, START, END
-from typing import TypedDict
+from typing import TypedDict,List
 
 
 class AgentState(TypedDict):
@@ -21,9 +21,30 @@ class AgentState(TypedDict):
 
     final_report: str
 
+def chat(state: AgentState) -> AgentState:
+    response = chat_agent.invoke(
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"Summarize the following user request/conversation into a concise, actionable goal for a code scanning and quality analysis tool:\n\n{state['user_query']}"
+                }
+            ]
+        }
+    )
+    return {
+        "user_query": get_last_message(response)
+    }
 
 def get_last_message(result):
-    return result["messages"][-1].content
+    content = result["messages"][-1].content
+    if isinstance(content, list):
+        # Extract text from list of content blocks (e.g. Gemini/Anthropic format)
+        return "\n".join(
+            item.get("text", "") if isinstance(item, dict) else str(item)
+            for item in content
+        )
+    return content
 
 
 def project_scanner_node(state: AgentState):
@@ -170,6 +191,8 @@ def report_node(state: AgentState):
 graph = StateGraph(AgentState)
 
 graph.add_node("scanner", project_scanner_node)
+graph.add_node("chat", chat)
+
 graph.add_node("planner", planner_node)
 
 graph.add_node("security", security_node)
@@ -178,7 +201,9 @@ graph.add_node("code_quality", code_quality_node)
 
 graph.add_node("report", report_node)
 
-graph.add_edge(START, "scanner")
+graph.add_edge(START, "chat")
+graph.add_edge("chat", "scanner")
+
 graph.add_edge("scanner", "planner")
 
 graph.add_edge("planner", "security")

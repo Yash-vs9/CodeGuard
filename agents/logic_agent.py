@@ -1,8 +1,13 @@
 from langchain.agents import create_agent
 from tools.file_tools import run_terminal
+from langchain_openai import ChatOpenAI
+import os
+from langchain_openrouter import ChatOpenRouter
 
 from dotenv import load_dotenv
 load_dotenv()
+
+model = ChatOpenRouter(model="google/gemma-4-26b-a4b-it:free")
 
 logic_agent = create_agent(
     model="google_genai:gemini-3.1-flash-lite",

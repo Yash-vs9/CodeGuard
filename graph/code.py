@@ -3,9 +3,28 @@ from typing import TypedDict,List,Literal
 from agents.code_planner import planner_agent
 from agents.coder import coding_agent
 from agents.reviewer_agent import review_agent
+import os
 from models.review import Review
 from langchain_groq import ChatGroq
 from models.task_list import TaskList
+
+
+def _extract_content(message_content) -> str:
+    """Safely extract a plain string from a message's content field.
+    Handles both plain strings and list-of-block formats (Gemini/Anthropic)."""
+    if isinstance(message_content, str):
+        return message_content
+    if isinstance(message_content, list):
+        parts = []
+        for item in message_content:
+            if isinstance(item, dict):
+                parts.append(item.get("text", ""))
+            else:
+                parts.append(str(item))
+        return "\n".join(parts)
+    return str(message_content)
+
+
 class AgentState(TypedDict):
     user_query: str
     plan: str
@@ -38,20 +57,23 @@ def plan(state:AgentState)->AgentState:
     max_retries=2,
 )
     get_tasks=llm.with_structured_output(TaskList)
+    plan_text = _extract_content(response["messages"][-1].content)
     result=get_tasks.invoke(f"""Read this plan and give all the tasks in the order in which they need to be executed first
                      to build a project, Like you can's do the task implement JWT without initialising backend
-                     This is the plan {response} """)
-    plan_text = response["messages"][-1].content
+                     This is the plan {plan_text} """)
     return {
             "tasks": result.tasks,
-        "plan":plan_text,
+        "plan": plan_text,
         "current_task":0
     }
 
 def coding(state:AgentState)->AgentState:
     tasks=state['tasks']
     task=tasks[state['current_task']]
-    
+
+    # Ensure all tools resolve paths relative to the user's project directory
+    os.environ["AGENT_WORKING_DIR"] = state["working_dir"]
+
     response= coding_agent.invoke({
         "messages":[
             {
@@ -81,7 +103,7 @@ Working directory:
 {state['working_dir']}
 
 Coder response:
-{response["messages"][-1].content}
+{_extract_content(response["messages"][-1].content)}
 """
         }
     ]
@@ -97,7 +119,7 @@ Coder response:
     review_result_structured=llm.with_structured_output(Review)
     review=review_result_structured.invoke(f"""
     This is the message , Return if the code is passed or not and the feedback
-                                           {    review_result["messages"][-1].content}
+                                           {_extract_content(review_result["messages"][-1].content)}
 """)
     if(review.passed==False):
         return { 
@@ -148,18 +170,20 @@ graph = builder.compile()
 # -----------------------------------
 # Test
 # -----------------------------------
+if __name__ == "__main__":
+    os.environ["AGENT_WORKING_DIR"] = "/Users/yash/Desktop/test_project"
 
-for event in graph.stream(
-    {
-        "user_query": "Build a todo app in HTML CSS AND JS",
-        "plan": "",
-        "memory": "",
-        "working_dir": "/Users/yash/Desktop/test_project",
-        "tasks": [],
-        "current_task": 0,
-        "feedback_on_current_task_ifany": "",
-    },
-    stream_mode="updates",
-):
-    print(event)
+    for event in graph.stream(
+        {
+            "user_query": "My tic tac toe app is not working, i cant click buttons and the grid is vertical not matrix like, fix the code",
+            "plan": "",
+            "memory": "",
+            "working_dir": "/Users/yash/Desktop/test_project",
+            "tasks": [],
+            "current_task": 0,
+            "feedback_on_current_task_ifany": "",
+        },
+        stream_mode="updates",
+    ):
+        print(event)
 

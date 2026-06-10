@@ -35,7 +35,7 @@ def chat(state: AgentState) -> AgentState:
             "messages": [
                 {
                     "role": "user",
-                    "content": f"Summarize the following user request/conversation into a concise, actionable goal for a code scanning and quality analysis tool:\n\n{state['user_query']}"
+                    "content": f"Summarize the following user request/conversation into a concise, actionable goal for a code scanning and quality analysis tool. IMPORTANT: You MUST preserve any explicit instructions from the user about which agents or checks to skip, ignore, or not run:\n\n{state['user_query']}"
                 }
             ]
         }
@@ -103,7 +103,7 @@ Project Scan:
     # Use structured output to decide which agents to run
     llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite")
     structured_llm = llm.with_structured_output(Agents)
-    agents_required = structured_llm.invoke(f"Based on this plan, which agents should be executed? Return true for the needed agents.\n\nPlan:\n{plan_text}")
+    agents_required = structured_llm.invoke(f"Based on the user request and the plan, which agents should be executed? Return true for the needed agents. IMPORTANT: If the User Request explicitly says NOT to run a specific agent, you MUST return false for it, regardless of the plan.\n\nUser Request:\n{state['user_query']}\n\nPlan:\n{plan_text}")
 
     return {
         "plan": plan_text,

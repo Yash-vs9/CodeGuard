@@ -112,15 +112,27 @@ def main():
                 elif node_name == "scanner":
                     progress.update(task_id, description="[bold cyan]Scanner[/bold cyan] is mapping the project structure...")
                 elif node_name == "planner":
-                    progress.update(task_id, description="[bold green]Planner[/bold green] is building the approach...")
+                    progress.update(task_id, description="[bold green]Planner[/bold green] finished building the approach...")
+                    plan_text = event[node_name].get("plan", "")
+                    if plan_text:
+                        progress.console.print(Panel(Markdown(plan_text), title="[bold green]📋 Investigation Plan[/bold green]", border_style="bold green"))
                 elif node_name == "security":
-                    progress.update(task_id, description="[bold red]Security Agent[/bold red] is hunting for vulnerabilities...")
+                    progress.update(task_id, description="[bold red]Security Agent[/bold red] finished!")
+                    report = event[node_name].get("security_report", "")
+                    if report:
+                        progress.console.print(Panel(Markdown(report), title="[bold red]🛡️ Security Report[/bold red]", border_style="bold red"))
                 elif node_name == "logic":
-                    progress.update(task_id, description="[bold yellow]Logic Agent[/bold yellow] is evaluating code logic...")
+                    progress.update(task_id, description="[bold yellow]Logic Agent[/bold yellow] finished!")
+                    report = event[node_name].get("logic_report", "")
+                    if report:
+                        progress.console.print(Panel(Markdown(report), title="[bold yellow]🧠 Logic Report[/bold yellow]", border_style="bold yellow"))
                 elif node_name == "code_quality":
-                    progress.update(task_id, description="[bold magenta]Quality Agent[/bold magenta] is reviewing standards...")
+                    progress.update(task_id, description="[bold magenta]Quality Agent[/bold magenta] finished!")
+                    report = event[node_name].get("quality_report", "")
+                    if report:
+                        progress.console.print(Panel(Markdown(report), title="[bold magenta]✨ Code Quality Report[/bold magenta]", border_style="bold magenta"))
                 elif node_name == "report":
-                    progress.update(task_id, description="[bold white]Generating Final Report...[/bold white]")
+                    progress.update(task_id, description="[bold white]Finishing up...[/bold white]")
                     final_report = event[node_name].get("final_report", "")
                 else:
                     progress.update(task_id, description=f"Processing node: [bold]{node_name}[/bold]...")
@@ -133,21 +145,11 @@ def main():
             console.print(f"[bold red]An error occurred during execution: {e}[/bold red]")
             sys.exit(1)
 
-    # After completion, display the final report beautifully
+    # After completion
     if final_report:
-        # Pre-process the final report text to make headers render well in markdown
-        report_text = final_report.replace("================ SECURITY ================", "# 🛡️ SECURITY")
-        report_text = report_text.replace("================ LOGIC ===================", "# 🧠 LOGIC")
-        report_text = report_text.replace("============= CODE QUALITY ===============", "# ✨ CODE QUALITY")
-        
-        console.print(Panel(
-            Markdown(report_text),
-            title="[bold green]Analysis Complete[/bold green]",
-            border_style="bold green",
-            expand=True
-        ))
+        console.print("\n[bold green]✅ Analysis Complete![/bold green]")
     else:
-        console.print("[bold red]No final report was generated![/bold red]")
+        console.print("\n[bold red]No final report was generated![/bold red]")
 
 if __name__ == "__main__":
     main()

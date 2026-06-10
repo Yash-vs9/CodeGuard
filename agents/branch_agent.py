@@ -1,7 +1,8 @@
 from langchain_groq import ChatGroq
 from models.branch import Branch
 from langchain_core.messages import SystemMessage, HumanMessage
-
+from dotenv import load_dotenv
+load_dotenv()
 llm= ChatGroq(
     model="qwen/qwen3-32b",
     temperature=0.2,

@@ -1,5 +1,5 @@
 from langchain.agents import create_agent
-from tools.code_tools import (
+from tools.code_tools.tools import (
     read_file,
     create_file,
     overwrite_file,
@@ -18,7 +18,7 @@ from tools.code_tools import (
 from dotenv import load_dotenv
 load_dotenv()
 
-planner_agent = create_agent(
+coding_agent = create_agent(
     model="google_genai:gemini-3.1-flash-lite",
     tools=[ask_user,search_web,preview_changes,run_tests,git_diff,run_command,search_in_files,find_files,list_dir,delete_file,edit_file,overwrite_file,create_file,read_file],
     system_prompt="""

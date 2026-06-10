@@ -20,32 +20,73 @@ The system employs a state graph where different specialized AI agents take turn
 ```mermaid
 graph TD
     %% Nodes
-    Start((START))
-    Scanner[Project Scanner Agent]
-    Planner[Planner Agent]
-    Security[Security Agent]
-    Logic[Logic Agent]
-    Quality[Code Quality Agent]
-    ReportNode[Report Node]
-    EndNode((END))
+    CLI[/"Dragon CLI — cli.py"/]
+    UserInput(("User Input"))
+    
+    ChatAgent["Chat Agent — Memory & Query Refinement"]
+    
+    ModeSwitch{"Mode Selection"}
+
+    subgraph ScanGraph ["🔍 Scan Mode (graph.py)"]
+        Scanner["Project Scanner Agent"]
+        ScanPlanner["Planner Agent — Strategy"]
+        
+        Security["Security Agent"]
+        Logic["Logic Agent"]
+        Quality["Code Quality Agent"]
+        
+        Report["Report Aggregator"]
+    end
+
+    subgraph CodeGraph ["💻 Code Mode (code.py)"]
+        CodePlanner["Code Planner Agent — Task Breakdown"]
+        Coder["Coding Agent — Workspace Execution"]
+        Reviewer["Reviewer Agent — Feedback Loop"]
+        Tasks[("Task List Queue")]
+    end
+
+    FinalOutput[/"Final Result to User"/]
 
     %% Data Flow
-    Start -->|User Query + Project Path| Scanner
-    Scanner -->|Project Map| Planner
+    UserInput --> CLI
+    CLI --> ChatAgent
+    ChatAgent -->|Extracts Goal| ModeSwitch
     
-    Planner -->|Review Plan + Project Map| Security
-    Planner -->|Review Plan + Project Map| Logic
-    Planner -->|Review Plan + Project Map| Quality
+    ModeSwitch -->|--mode scan| Scanner
+    ModeSwitch -->|--mode code| CodePlanner
+
+    %% Scan Flow
+    Scanner -->|Project Map| ScanPlanner
+    ScanPlanner -->|Review Plan| Security
+    ScanPlanner -->|Review Plan| Logic
+    ScanPlanner -->|Review Plan| Quality
     
-    Security -->|Security Report| ReportNode
-    Logic -->|Logic Report| ReportNode
-    Quality -->|Quality Report| ReportNode
+    Security -->|Findings| Report
+    Logic -->|Findings| Report
+    Quality -->|Findings| Report
     
-    ReportNode -->|Final Comprehensive Report| EndNode
+    Report --> FinalOutput
+
+    %% Code Flow
+    CodePlanner -->|Tasks & Plan| Tasks
+    Tasks -->|Next Task| Coder
+    Coder -->|Implementation| Reviewer
+    Reviewer -->|Failed — Feedback| Coder
+    Reviewer -->|Passed| Tasks
+    Tasks -->|All complete| FinalOutput
 
     %% Styling
-    classDef agent fill:#f9f,stroke:#333,stroke-width:2px;
-    class Scanner,Planner,Security,Logic,Quality agent;
+    classDef io fill:#ccfbf1,stroke:#0f766e,stroke-width:1.5px,color:#134e4a;
+    classDef core fill:#e0e7ff,stroke:#4338ca,stroke-width:1.5px,color:#312e81;
+    classDef code_agent fill:#dbeafe,stroke:#1d4ed8,stroke-width:1.5px,color:#1e3a8a;
+    classDef scan_agent fill:#dcfce7,stroke:#15803d,stroke-width:1.5px,color:#14532d;
+    classDef data fill:#ffedd5,stroke:#c2410c,stroke-width:1.5px,color:#7c2d12;
+
+    class UserInput,CLI,FinalOutput io;
+    class ChatAgent,ModeSwitch core;
+    class CodePlanner,Coder,Reviewer code_agent;
+    class Scanner,ScanPlanner,Security,Logic,Quality,Report scan_agent;
+    class Tasks data;
 ```
 
 ### 🧩 Agents Involved
@@ -59,11 +100,19 @@ graph TD
 
 ### 🚀 Usage
 
-Execute the vulnerability scanner by running:
+Execute the vulnerability scanner or the coding agent using the Dragon CLI:
+
 ```bash
-python main.py
+# 🔍 Scan Mode (Vulnerability & Quality analysis)
+python cli.py --mode scan -q "Find bugs" -p /path/to/project
+
+# 💻 Code Mode (Autonomous coding & building)
+python cli.py --mode code -q "Build a tic tac toe app" -p /path/to/project
+
+# Interactive mode
+python cli.py --mode code
 ```
-*(Make sure to update the `project_path` and `user_query` in `main.py` before running).*
+*(Make sure to specify your valid project path).*
 
 ---
 

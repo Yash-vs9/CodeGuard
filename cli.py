@@ -87,7 +87,7 @@ def run_code_graph(args):
     input_data = {
         "user_query": query,
         "plan": "",
-        "memory": "",
+        "memory": [],
         "working_dir": working_dir,
         "tasks": [],
         "current_task": 0,

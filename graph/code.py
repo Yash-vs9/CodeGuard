@@ -7,28 +7,18 @@ import os
 from models.review import Review
 from langchain_groq import ChatGroq
 from models.task_list import TaskList
-
-
-def _extract_content(message_content) -> str:
-    """Safely extract a plain string from a message's content field.
-    Handles both plain strings and list-of-block formats (Gemini/Anthropic)."""
-    if isinstance(message_content, str):
-        return message_content
-    if isinstance(message_content, list):
-        parts = []
-        for item in message_content:
-            if isinstance(item, dict):
-                parts.append(item.get("text", ""))
-            else:
-                parts.append(str(item))
-        return "\n".join(parts)
-    return str(message_content)
-
-
+llm= ChatGroq(
+    model="qwen/qwen3-32b",
+    temperature=0.2,
+    
+    reasoning_format="parsed",
+    timeout=None,
+    max_retries=2,
+)
 class AgentState(TypedDict):
     user_query: str
     plan: str
-    memory: str
+    memory: List[str]
     working_dir: str
     tasks: List[str]
     current_task:int
@@ -48,32 +38,34 @@ def plan(state:AgentState)->AgentState:
             ]
         }
     )
-    llm= ChatGroq(
-    model="qwen/qwen3-32b",
-    temperature=0.2,
     
-    reasoning_format="parsed",
-    timeout=None,
-    max_retries=2,
-)
     get_tasks=llm.with_structured_output(TaskList)
-    plan_text = _extract_content(response["messages"][-1].content)
     result=get_tasks.invoke(f"""Read this plan and give all the tasks in the order in which they need to be executed first
                      to build a project, Like you can's do the task implement JWT without initialising backend
-                     This is the plan {plan_text} """)
+                     This is the plan {response} """)
+    plan_text = response["messages"][-1].content
+    if isinstance(plan_text, list):
+        plan_text = "".join(item.get("text", "") if isinstance(item, dict) else str(item) for item in plan_text)
     return {
             "tasks": result.tasks,
-        "plan": plan_text,
+        "plan":plan_text,
         "current_task":0
     }
 
 def coding(state:AgentState)->AgentState:
     tasks=state['tasks']
     task=tasks[state['current_task']]
+    new_memory=state['memory']
+    if(len(state["memory"])>10):
+        memory=state['memory']
+        summarised_memory=llm.invoke(
+            f"Here is the text, your task is to summarise it in less tokens and keep important points {memory[:-2]}"
+        )
+        new_memory=[summarised_memory.content]+memory[-2:]
 
-    # Ensure all tools resolve paths relative to the user's project directory
-    os.environ["AGENT_WORKING_DIR"] = state["working_dir"]
 
+
+    print(new_memory)
     response= coding_agent.invoke({
         "messages":[
             {
@@ -82,12 +74,18 @@ def coding(state:AgentState)->AgentState:
                 This is the first task you need to perform {task}
                 This is the working directory: {state['working_dir']}
                 This is the review if any : {state['feedback_on_current_task_ifany']}
+                Memory: {chr(10).join(new_memory)}
                 return what files you have created or added
 """
             }
         ]
     
     })
+    coder_text = response["messages"][-1].content
+    if isinstance(coder_text, list):
+        coder_text = "".join(item.get("text", "") if isinstance(item, dict) else str(item) for item in coder_text)
+        
+    new_memory = new_memory + [coder_text]
     review_result = review_agent.invoke({
     "messages": [
         {
@@ -103,23 +101,20 @@ Working directory:
 {state['working_dir']}
 
 Coder response:
-{_extract_content(response["messages"][-1].content)}
+{coder_text}
 """
         }
     ]
 })
-    llm= ChatGroq(
-    model="qwen/qwen3-32b",
-    temperature=0.2,
     
-    reasoning_format="parsed",
-    timeout=None,
-    max_retries=2,
-)
+    review_text = review_result["messages"][-1].content
+    if isinstance(review_text, list):
+        review_text = "".join(item.get("text", "") if isinstance(item, dict) else str(item) for item in review_text)
+        
     review_result_structured=llm.with_structured_output(Review)
     review=review_result_structured.invoke(f"""
     This is the message , Return if the code is passed or not and the feedback
-                                           {_extract_content(review_result["messages"][-1].content)}
+                                           {review_text}
 """)
     if(review.passed==False):
         return { 
@@ -127,6 +122,7 @@ Coder response:
 
         }
     return {
+        "memory":new_memory,
         "current_task":state['current_task']+1
     }
     
@@ -177,7 +173,7 @@ if __name__ == "__main__":
         {
             "user_query": "My tic tac toe app is not working, i cant click buttons and the grid is vertical not matrix like, fix the code",
             "plan": "",
-            "memory": "",
+            "memory": [],
             "working_dir": "/Users/yash/Desktop/test_project",
             "tasks": [],
             "current_task": 0,
@@ -186,4 +182,5 @@ if __name__ == "__main__":
         stream_mode="updates",
     ):
         print(event)
+        
 

@@ -13,41 +13,19 @@ from graph.code import graph as code_graph
 
 console = Console()
 
-DRAGON_ART = r"""
-[bold green]                                                 /===-_---~~~~~~~~~------____[/bold green]
-[bold green]                                                |===-~___                _,-'[/bold green]
-[bold green]                 -==\\                         `//~\\   ~~~~`---.___.-~~[/bold green]
-[bold green]             ______-==|                         | |  \\           _-~`[/bold green]
-[bold green]       __--~~~  ,-/-==\\                        | |   `\\        ,'[/bold green]
-[bold green]    _-~       /'    |  \\                      / /      \\      /[/bold green]
-[bold green]  .'        /       |   \\                   /' /        \\   /'[/bold green]
-[bold green] /  ____  /         |    \\`\\.__/-~~ ~ \\ _ _/'  /          \\/'[/bold green]
-[bold green]/-'~    ~~~~~---__  |     ~-/~         ( )   /'        _--~`[/bold green]
-[bold green]                  \\_|      /        _)   ;  ),   __--~~[/bold green]
-[bold green]                    '~~--_/      _-~/-  / \\   '-~ \\[/bold green]
-[bold green]                   {\\__--_/}    / \\\\_>- )<__\\      \\[/bold green]
-[bold green]                   /'   (_/  _-~  | |__>--<__|      |[/bold green]
-[bold green]                  |[/bold green][bold red]O  O[/bold red][bold green] _/) )-~     | |__>--<__|     |[/bold green]
-[bold green]                  / /~ ,_/       / /__>---<__/      |[/bold green]
-[bold green]                 o o _//        /-~_>---<__-~      /[/bold green]
-[bold green]                 (^(~          /~_>---<__-      _-~[/bold green]
-[bold green]                ,/|           /__>--<__/     _-~[/bold green]
-[bold green]             ,//('(          |__>--<__|     /                  .----_[/bold green]
-[bold green]            ( ( '))          |__>--<__|    |                 /' _---_[/bold green]
-[bold green]         `-)) )) (           |__>--<__|    |               /'  /     ~\\`\\[/bold green]
-[bold green]        ,/,'//( (             \\__>--<__\\    \\            /'  //        ||[/bold green]
-[bold green]      ,( ( ((, ))              ~-__>--<_~-_  ~--____---~' _/'/        /'[/bold green]
-[bold green]    `~/  )` ) ,/|                 ~-_~>--<_/-__       __-~ _/[/bold green]
-[bold green]  ._-~//( )/ )) `                    ~~-'_/_/ /~~~~~~~__--~[/bold green]
-[bold green]   ;'( ')/ ,)(                              ~~~~~~~~~~[/bold green]
-[bold green]  ' ') '( (/[/bold green]
-[bold green]    '   '  `[/bold green]
+CODEGUARD_ART = r"""
+[bold green]  ██████╗ ██████╗ ██████╗ ███████╗ ██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗ [/bold green]
+[bold green] ██╔════╝██╔═══██╗██╔══██╗██╔════╝██╔════╝ ██║   ██║██╔══██╗██╔══██╗██╔══██╗[/bold green]
+[bold green] ██║     ██║   ██║██║  ██║█████╗  ██║  ███╗██║   ██║███████║██████╔╝██║  ██║[/bold green]
+[bold green]██║     ██║   ██║██║  ██║██╔══╝  ██║   ██║██║   ██║██╔══██║██╔══██╗██║  ██║[/bold green]
+[bold green]╚██████╗╚██████╔╝██████╔╝███████╗╚██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝[/bold green]
+[bold green] ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝[/bold green]
 """
 
 
 def print_banner():
     console.print(Panel.fit(
-        DRAGON_ART.strip('\n'),
+        CODEGUARD_ART.strip('\n'),
         title="[bold cyan][/bold cyan]",
         subtitle="[bold magenta]AI Security & Quality Scanner[/bold magenta]",
         border_style="bold blue"

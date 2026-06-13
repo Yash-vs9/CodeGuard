@@ -1,5 +1,6 @@
 # AI Agent System 🤖
 
+![CODEGUARD Banner](codeguard_banner.svg)
 This repository houses a powerful, dual-mode multi-agent system built with **LangGraph** and **Langchain Google GenAI**. The system is designed to autonomously analyze, review, and write code by orchestrating specialized AI agents.
 
 Both modes utilize Google's Gemini LLMs and structured state-graphs to handle planning, context gathering, and execution.

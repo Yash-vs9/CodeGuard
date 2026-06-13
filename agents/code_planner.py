@@ -1,10 +1,17 @@
 from langchain.agents import create_agent
+from langchain_google_genai import ChatGoogleGenerativeAI
 
+import os
 from dotenv import load_dotenv
 load_dotenv()
 
+GOOGLE_API_KEY_1=os.getenv("GOOGLE_API_KEY_1")
+model = ChatGoogleGenerativeAI(
+    model="gemini-3.1-flash-lite",
+    google_api_key=GOOGLE_API_KEY_1,
+)
 planner_agent = create_agent(
-    model="google_genai:gemini-3.1-flash-lite",
+    model=model,
     tools=[],
     system_prompt="""
 You are an expert software architect and planner.

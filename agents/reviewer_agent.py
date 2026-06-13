@@ -1,4 +1,7 @@
 from langchain.agents import create_agent
+import os
+from langchain_google_genai import ChatGoogleGenerativeAI
+
 from tools.code_tools.tools import (
     read_file,
     create_file,
@@ -17,9 +20,14 @@ from tools.code_tools.tools import (
 )
 from dotenv import load_dotenv
 load_dotenv()
-
+GOOGLE_API_KEY_3=os.getenv("GOOGLE_API_KEY_3")
+model = ChatGoogleGenerativeAI(
+    model="gemini-3.1-flash-lite",
+    google_api_key=GOOGLE_API_KEY_3,
+)
 review_agent = create_agent(
-    model="google_genai:gemini-3.1-flash-lite",
+    model=model,
+
     tools=[ask_user,search_web,preview_changes,run_tests,git_diff,run_command,search_in_files,find_files,list_dir,delete_file,edit_file,overwrite_file,create_file,read_file],
     system_prompt="""
 You are an expert software reviewer.

@@ -1,4 +1,4 @@
-# AI Agent System 🤖
+# AI Agent System
 
 ![CODEGUARD Banner](codeguard_banner.svg)
 This repository houses a powerful, dual-mode multi-agent system built with **LangGraph** and **Langchain Google GenAI**. The system is designed to autonomously analyze, review, and write code by orchestrating specialized AI agents.
@@ -7,7 +7,7 @@ Both modes utilize Google's Gemini LLMs and structured state-graphs to handle pl
 
 ---
 
-## 🏗️ High-Level Architecture
+## High-Level Architecture
 
 The system features a single CLI entry point (`cli.py`) that acts as a router, dropping the user into one of two specialized state graphs based on the mode provided:
 
@@ -83,7 +83,7 @@ graph TD
 
 ---
 
-## 🔍 Detailed Flow: Scan Mode (`graph.py`)
+## Detailed Flow: Scan Mode (`graph.py`)
 
 In **Scan Mode**, the agent system acts as a multi-threaded code reviewer. The state graph passes an `AgentState` containing the project map, review plan, and individual reports between nodes.
 
@@ -143,7 +143,7 @@ graph TD
 
 ---
 
-## 💻 Detailed Flow: Code Mode (`code.py`)
+## Detailed Flow: Code Mode (`code.py`)
 
 In **Code Mode**, the system acts as an autonomous pair programmer. It features an iterative feedback loop where code is written, reviewed, and rewritten until it passes validation.
 
@@ -206,15 +206,15 @@ graph TD
 
 ---
 
-## 🚀 Usage
+## Usage
 
 Execute the vulnerability scanner or the coding agent using the Dragon CLI. The CLI features rich progress spinners and interactive prompts.
 
 ```bash
-# 🔍 Scan Mode (Vulnerability & Quality analysis)
+# Scan Mode (Vulnerability & Quality analysis)
 python cli.py --mode scan -q "Find bugs" -p /path/to/project
 
-# 💻 Code Mode (Autonomous coding & building)
+# Code Mode (Autonomous coding & building)
 python cli.py --mode code -q "Build a tic tac toe app" -p /path/to/project
 
 # Interactive Mode (Prompts for inputs)
@@ -224,5 +224,23 @@ python cli.py --mode code
 
 ---
 
-## 📄 License
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+GOOGLE_API_KEY_1=
+GOOGLE_API_KEY=
+
+GOOGLE_API_KEY_2=
+GOOGLE_API_KEY_3=
+SERPAPI_KEY=
+OPENROUTER_API_KEY=
+GROQ_API_KEY=
+AGENT_WORKING_DIR=
+```
+
+---
+
+## License
 This project is open-source. Feel free to use and modify the agents for your personal workflows.

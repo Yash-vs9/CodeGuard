@@ -51,6 +51,8 @@ User Query: {state['user_query']}"""
     if isinstance(plan_text, list):
         plan_text = "".join(item.get("text", "") if isinstance(item, dict) else str(item) for item in plan_text)
         
+    print(f"\n[Plan Generated]:\n{plan_text}\n")
+    
     get_tasks = llm.with_structured_output(TaskList)
     result = get_tasks.invoke(f"""Analyze the following implementation plan and extract a strictly ordered list of tasks.
 Each task must be a clear, actionable step. Dependencies must be respected (e.g., initialize backend before writing API endpoints).

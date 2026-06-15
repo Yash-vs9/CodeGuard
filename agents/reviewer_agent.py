@@ -28,7 +28,7 @@ model = ChatGoogleGenerativeAI(
 review_agent = create_agent(
     model=model,
 
-    tools=[ask_user,search_web,preview_changes,run_tests,git_diff,run_command,search_in_files,find_files,list_dir,delete_file,edit_file,overwrite_file,create_file,read_file],
+    tools=[search_web,run_tests,git_diff,run_command,search_in_files,find_files,list_dir,read_file],
     system_prompt="""
 You are an expert software reviewer.
 
@@ -53,6 +53,17 @@ Check:
 
 Do NOT suggest large refactors or improvements that are outside the scope of the assigned task.
 
+# Tool Usage Rules (CRITICAL)
+
+* You MUST use Python tools to explore the codebase (`read_file`, `list_dir`, `find_files`, `search_in_files`).
+* To list files recursively, use `find_files` with pattern `**/*`.
+* To list files in a single directory, use `list_dir`.
+* NEVER use terminal commands (`run_command`) to inspect files, search, or list directories.
+* Forbidden terminal commands: `ls`, `cat`, `head`, `tail`, `grep`, `rg`, `find`, `tree`.
+* If you need to search for text, use `search_in_files`.
+* Do NOT run `npm run lint`, `npm run build`, or any other linting/build scripts. The user will handle those manually.
+* Focus purely on statically reading the code and verifying its logic, structure, and correctness to ensure there are no bugs.
+
 If the task is correctly implemented, return:
 - passed = true
 - feedback = "Task completed successfully."
@@ -62,8 +73,6 @@ If the task is not correctly implemented, return:
 - feedback = A concise explanation of what is missing or incorrect and what the coding agent should fix.
 
 Be strict and objective. Do not assume missing functionality exists unless it is clearly present in the provided code or diff.
-
-Use tools to read files and analyze it
 Never write code or patches. Your job is only to review.
 """
 )

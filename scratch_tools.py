@@ -24,7 +24,7 @@ MAX_FILE_SIZE = 2 * 1024 * 1024  # 2 MB
 FILE_CACHE = {}
 DIR_CACHE = {}
 
-DEV_SERVER_COMMANDS = [
+BLOCKED_COMMANDS = [
     "npm run dev", "npm start", "npm run start",
     "yarn dev", "yarn start",
     "pnpm dev", "pnpm start",
@@ -32,11 +32,15 @@ DEV_SERVER_COMMANDS = [
     "python -m flask run", "flask run",
     "uvicorn", "gunicorn",
     "next dev", "next start",
+    "vite", "vite dev",
     "ng serve",
     "rails server", "rails s",
+    "grep -r", "find .", "find -exec", "ls -r", "tree"
 ]
 
-
+BLOCKED_PATHS_IN_CMD = [
+    ".next", "node_modules", "dist", "build", "coverage", ".git"
+]
 
 # ── ANSI colors ───────────────────────────────────────────────────────────────
 class C:
@@ -91,23 +95,20 @@ def _invalidate_file_cache(path: Path):
 def _is_blocked(command: str) -> bool:
     cmd = command.strip().lower()
     
-    for dev_cmd in DEV_SERVER_COMMANDS:
-        if cmd == dev_cmd or cmd.startswith(f"{dev_cmd} "):
+    for blocked in BLOCKED_COMMANDS:
+        if blocked in cmd:
             return True
             
-    # Block vite specifically if it's running the server, but allow installs/lists
-    if cmd == "vite" or cmd.startswith("vite ") or "npx vite" in cmd:
-        if "install" not in cmd and "add" not in cmd and "list" not in cmd:
-            return True
-            
-    # Block terminal search/read commands that are recursive or dangerous
-    for term_cmd in ["cat", "grep", "rg", "find", "tree"]:
-        if cmd.startswith(f"{term_cmd} ") or cmd == term_cmd:
-            return True
-            
-    if "ls -r" in cmd:
+    if "rg " in cmd and "--glob" not in cmd and "-g" not in cmd and "--ignore" not in cmd:
+        return True
+        
+    if "cat " in cmd:
         return True
 
+    for blocked in BLOCKED_PATHS_IN_CMD:
+        if f" {blocked}" in cmd or f"/{blocked}" in cmd or f"'{blocked}'" in cmd or f'"{blocked}"' in cmd:
+            return True
+            
     return False
 
 def _banner(action: str, color: str, path: str = None, elapsed: float = None):
@@ -449,12 +450,8 @@ def run_command(command: str, cwd: str = ".") -> str:
 
         if _is_blocked(command):
             msg = (
-                f"BLOCKED: '{command}' contains blocked patterns and cannot be run.\n"
-                f"-> To list files recursively, use the 'find_files' tool with pattern '**/*'.\n"
-                f"-> To list files in a single folder, use the 'list_dir' tool.\n"
-                f"-> To read a file, use the 'read_file' tool.\n"
-                f"-> To search text, use the 'search_in_files' tool.\n"
-                f"NEVER use terminal commands (like find, ls -R, grep, cat) to explore the codebase."
+                f"BLOCKED: '{command}' contains blocked patterns and cannot "
+                f"be run by the agent."
             )
             print(f"{C.RED}✘ {msg}{C.RESET}")
             return msg

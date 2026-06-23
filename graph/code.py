@@ -1,15 +1,16 @@
 import os
 from typing import TypedDict, List, Literal
-
 from langgraph.graph import StateGraph, START, END
 from langchain_groq import ChatGroq
-
 from agents.code_planner import planner_agent
 from agents.coder import coding_agent
 from agents.reviewer_agent import review_agent
 from models.review import Review
 from models.task_list import TaskList
-
+from langsmith.wrappers import wrap_openai
+from langsmith import traceable
+from dotenv import load_dotenv
+load_dotenv()
 llm = ChatGroq(
     model="qwen/qwen3-32b",
     temperature=0.2,
@@ -27,6 +28,7 @@ class AgentState(TypedDict):
     current_task: int
     feedback_on_current_task_ifany: str
 
+@traceable
 def plan(state: AgentState) -> AgentState:
     print("\n" + "="*50)
     print("--- [Planner Agent] Creating Plan ---")
@@ -64,6 +66,7 @@ Implementation Plan:
         "current_task": 0
     }
 
+@traceable
 def coding(state: AgentState) -> AgentState:
     tasks = state['tasks']
     task = tasks[state['current_task']]
@@ -176,6 +179,7 @@ Review Message:
         "feedback_on_current_task_ifany": ""
     }
 
+@traceable
 def should_continue(state: AgentState):
     if state["current_task"] >= len(state["tasks"]):
         return END

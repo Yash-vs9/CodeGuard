@@ -124,55 +124,55 @@ Ensure you write clean, production-ready code. Once done, provide a brief summar
         
     new_memory = new_memory + [coder_text]
     
-    print("\n" + "-"*50)
-    print("--- [Reviewer Agent] Reviewing Code ---")
-    print("-"*50)
+#     print("\n" + "-"*50)
+#     print("--- [Reviewer Agent] Reviewing Code ---")
+#     print("-"*50)
     
-    review_result = review_agent.invoke({
-        "messages": [
-            {
-                "role": "user",
-                "content": f"""You are a strict code reviewer. 
-Review the coder's output against the plan and current task.
+#     review_result = review_agent.invoke({
+#         "messages": [
+#             {
+#                 "role": "user",
+#                 "content": f"""You are a strict code reviewer. 
+# Review the coder's output against the plan and current task.
 
-### Overall Plan
-{state['plan']}
+# ### Overall Plan
+# {state['plan']}
 
-### Current Task
-{task}
+# ### Current Task
+# {task}
 
-### Working Directory
-{state['working_dir']}
+# ### Working Directory
+# {state['working_dir']}
 
-### Coder's Output
-{coder_text}
+# ### Coder's Output
+# {coder_text}
 
-Did the coder successfully complete the task? Check for obvious errors, incomplete code, or missing files.
-Provide constructive feedback if it failed.
-"""
-            }
-        ]
-    })
+# Did the coder successfully complete the task? Check for obvious errors, incomplete code, or missing files.
+# Provide constructive feedback if it failed.
+# """
+#             }
+#         ]
+#     })
     
-    review_text = review_result["messages"][-1].content
-    if isinstance(review_text, list):
-        review_text = "".join(item.get("text", "") if isinstance(item, dict) else str(item) for item in review_text)
+#     review_text = review_result["messages"][-1].content
+#     if isinstance(review_text, list):
+#         review_text = "".join(item.get("text", "") if isinstance(item, dict) else str(item) for item in review_text)
         
-    review_result_structured = llm.with_structured_output(Review)
-    review = review_result_structured.invoke(f"""
-Analyze the following review message. Determine if the code passed the review and extract the feedback.
+#     review_result_structured = llm.with_structured_output(Review)
+#     review = review_result_structured.invoke(f"""
+# Analyze the following review message. Determine if the code passed the review and extract the feedback.
 
-Review Message:
-{review_text}
-""")
+# Review Message:
+# {review_text}
+# """)
 
-    if not review.passed:
-        print(f"\n[Review Failed]: {review.feedback}\n")
-        return { 
-            "feedback_on_current_task_ifany": review.feedback
-        }
+#     if not review.passed:
+#         print(f"\n[Review Failed]: {review.feedback}\n")
+#         return { 
+#             "feedback_on_current_task_ifany": review.feedback
+#         }
         
-    print("\n[Review Passed]\n")
+#     print("\n[Review Passed]\n")
     return {
         "memory": new_memory,
         "current_task": state['current_task'] + 1,

@@ -1,6 +1,21 @@
 from langchain.agents import create_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
-
+from tools.code_tools.tools import (
+    read_file,
+    create_file,
+    overwrite_file,
+    edit_file,
+    delete_file,
+    list_dir,
+    find_files,
+    search_in_files,
+    run_command,
+    git_diff,
+    run_tests,
+    preview_changes,
+    search_web,
+    ask_user,
+)
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -12,7 +27,7 @@ model = ChatGoogleGenerativeAI(
 )
 planner_agent = create_agent(
     model=model,
-    tools=[],
+    tools=[ask_user,search_web,preview_changes,run_tests,git_diff,run_command,search_in_files,find_files,list_dir,delete_file,edit_file,overwrite_file,create_file,read_file],
     system_prompt="""
 You are an expert software architect and planner.
 

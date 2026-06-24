@@ -39,11 +39,7 @@ def plan(state: AgentState) -> AgentState:
             "messages": [
                 {
                     "role": "user",
-                    "content": f"""You are an expert technical planner.
-Analyze the user query and create a comprehensive, step-by-step implementation plan.
-Focus on architecture, file structure, and technical requirements.
-
-User Query: {state['user_query']}"""
+                    "content": f"""User Query: {state['user_query']}"""
                 }
             ]
         }
@@ -56,7 +52,6 @@ User Query: {state['user_query']}"""
     get_tasks = llm.with_structured_output(TaskList)
     result = get_tasks.invoke(f"""Analyze the following implementation plan and extract a strictly ordered list of tasks.
 Each task must be a clear, actionable step. Dependencies must be respected (e.g., initialize backend before writing API endpoints).
-
 Implementation Plan:
 {plan_text}""")
     

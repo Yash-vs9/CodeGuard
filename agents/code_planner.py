@@ -22,7 +22,7 @@ load_dotenv()
 
 GOOGLE_API_KEY_1=os.getenv("GOOGLE_API_KEY_1")
 model = ChatGoogleGenerativeAI(
-    model="gemini-3.1-flash-lite",
+    model="gemini-2.5-flash",
     google_api_key=GOOGLE_API_KEY_1,
 )
 planner_agent = create_agent(

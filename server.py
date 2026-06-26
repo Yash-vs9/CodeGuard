@@ -24,13 +24,17 @@ from mcp.server.fastmcp import FastMCP
 # ---- CONFIG: point this at your actual CodeGuard CLI entrypoint ----
 # Use the venv's real interpreter, not bare "python3" — subprocess won't
 # inherit an activated venv, so langchain etc. won't be found otherwise.
+
 PYTHON_BIN = "/Users/yash/Desktop/code_agent/.venv/bin/python3"   # <-- confirm this matches `which python3` after activating .venv
 MAIN_PY_PATH = "/Users/yash/Desktop/code_agent/cli.py"           # <-- set this
 PROJECT_CWD = os.path.dirname(MAIN_PY_PATH)  # run main.py from its own dir, regardless of Claude Desktop's CWD
-TIMEOUT_SECONDS = 300  # scan mode runs 3 agents sequentially, give it room
+TIMEOUT_SECONDS = 3600  # scan mode runs 3 agents sequentially, give it room
 
-mcp = FastMCP("codeguard")
-
+mcp = FastMCP(
+    "codeguard",
+    host="0.0.0.0",
+    port=8000,
+)
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
 
 
@@ -86,5 +90,51 @@ def analyze_codebase(path: str, query: str = "Scan this project for security, lo
     return stdout or "CodeGuard ran successfully but produced no captured output."
 
 
+@mcp.tool()
+def write_code(path: str, query: str) -> str:
+    """
+    Write code either to build a new project or to fix existing codebase
+
+    Args:
+        path: Absolute path to the project directory to write code on.
+        query: What project to build, or what issues to fix.
+    """
+    cmd = [
+        PYTHON_BIN, MAIN_PY_PATH,
+        "-m", "code",
+        "-p", path,
+        "-q", query,
+    ]
+
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=PROJECT_CWD,
+            capture_output=True,
+            text=True,
+            timeout=TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired:
+        return (
+            f"CodeGuard timed out after {TIMEOUT_SECONDS}s analyzing {path}. "
+            "consider raising TIMEOUT_SECONDS for larger repos."
+        )
+    except FileNotFoundError:
+        return (
+            "Could not find main.py. Check MAIN_PY_PATH in server.py "
+            "points to the correct absolute path."
+        )
+
+    stdout = _strip_ansi(result.stdout)
+
+    if result.returncode != 0:
+        stderr = _strip_ansi(result.stderr)
+        return f"CodeGuard exited with error (code {result.returncode}):\n{stderr}\n\n--- partial stdout ---\n{stdout}"
+
+    return stdout or "CodeGuard ran successfully but produced no captured output."
+
+
 if __name__ == "__main__":
-    mcp.run()
+        mcp.run(transport="streamable-http")
+
+

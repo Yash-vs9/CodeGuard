@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 load_dotenv()
 GOOGLE_API_KEY_2=os.getenv("GOOGLE_API_KEY_2")
 model = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite",
     google_api_key=GOOGLE_API_KEY_2,
 )
 coding_agent = create_agent(

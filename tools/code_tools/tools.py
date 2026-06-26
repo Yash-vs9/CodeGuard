@@ -119,8 +119,25 @@ def _banner(action: str, color: str, path: str = None, elapsed: float = None):
 def _divider(color: str = C.DIM):
     print(f"{color}{'─' * 52}{C.RESET}")
 
+import os
+
 def _approve(action: str, path: str, reason: str = "") -> bool:
     """Ask user to confirm a destructive operation. Returns True if approved."""
+
+    # Auto-approve path: lets this run non-interactively (e.g. via MCP subprocess,
+    # CI, or scripted runs) without hanging on input() waiting for a TTY that doesn't exist.
+    auto_approve = os.getenv("CODEGUARD_AUTO_APPROVE", "").strip().lower()
+    if auto_approve in ("1", "true", "y", "yes"):
+        _divider(C.YELLOW)
+        print(f"{C.YELLOW}{C.BOLD}⚠ Approval Required{C.RESET}\n")
+        print(f"{C.BOLD}Action:{C.RESET} {C.CYAN}{action}{C.RESET}")
+        print(f"{C.BOLD}Target:{C.RESET} {C.WHITE}{path}{C.RESET}")
+        if reason:
+            print(f"{C.BOLD}Reason:{C.RESET} {reason}")
+        print(f"{C.GREEN}✔ Auto-approved (CODEGUARD_AUTO_APPROVE set){C.RESET}")
+        _divider(C.YELLOW)
+        return True
+
     _divider(C.YELLOW)
     print(f"{C.YELLOW}{C.BOLD}⚠ Approval Required{C.RESET}\n")
     print(f"{C.BOLD}Action:{C.RESET} {C.CYAN}{action}{C.RESET}")

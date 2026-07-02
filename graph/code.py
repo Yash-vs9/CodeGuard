@@ -82,7 +82,7 @@ def coding(state: AgentState) -> AgentState:
     feedback_text = state.get('feedback_on_current_task_ifany') or "None"
     memory_text = "\n".join(new_memory) if new_memory else "No previous actions."
 
-    response = coding_agent.invoke({
+    agent_input = {
         "messages": [
             {
                 "role": "user",
@@ -109,7 +109,17 @@ Ensure you write clean, production-ready code. Once done, provide a brief summar
 """
             }
         ]
-    })
+    }
+
+    try:
+        response = coding_agent.invoke(agent_input)
+    except Exception as e:
+        if "RESOURCE_EXHAUSTED" in str(e):
+            print(f"\n[Warning] Primary agent failed with {e}. Falling back to Groq...")
+            fallback_msg = llm.invoke(agent_input["messages"])
+            response = {"messages": [fallback_msg]}
+        else:
+            raise
     
     coder_text = response["messages"][-1].content
     if isinstance(coder_text, list):
